@@ -21,9 +21,9 @@ struct Child: View {
 
     var body: some View {
         Button("Present") {
-            present(Modal(view: {
+            present(Modal(item: "Child2") {
                 Child2()
-            }))
+            })
         }
         .padding()
     }
@@ -34,9 +34,9 @@ struct Child2: View {
 
     var body: some View {
         Button("Replace") {
-            present(Modal(view: {
+            present(Modal(item: "Goodbye:") {
                 Text("GOODBYE")
-            }))
+            })
         }
         .padding()
     }
@@ -80,11 +80,11 @@ struct ModalPresenterVM: ViewModifier {
 struct Modal: Identifiable {
     let id: ID
     struct ID: Hashable {
-        let value = UUID()
+        let value: AnyHashable
     }
 
-    init(view: @escaping () -> some View) {
-        self.id = ID()
+    init(item: some Hashable, view: @escaping () -> some View) {
+        self.id = ID(value: AnyHashable(item))
         self.view = { AnyView(view()) }
     }
 
