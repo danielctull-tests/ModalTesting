@@ -1,24 +1,92 @@
-//
-//  ContentView.swift
-//  ModalTesting
-//
-//  Created by Tull, Daniel on 05/09/2023.
-//
 
 import SwiftUI
 
 struct ContentView: View {
+
+
     var body: some View {
         VStack {
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
-            Text("Hello, world!")
+            Child()
+        }
+        .modifier(ModalPresenterVM())
+        .padding()
+    }
+}
+
+struct Child: View {
+    @Environment(\.modalPresenter) var present
+
+    var body: some View {
+        Button("Present") {
+            present(Modal(view: {
+                Child2()
+            }))
         }
         .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct Child2: View {
+    @Environment(\.modalPresenter) var present
+
+    var body: some View {
+        Button("Replace") {
+            present(Modal(view: {
+                Text("GOODBYE")
+            }))
+        }
+        .padding()
+    }
+
+}
+
+struct ModalKey: EnvironmentKey {
+    static var defaultValue = ModalPresenter { _ in }
+}
+
+extension EnvironmentValues {
+    var modalPresenter: ModalPresenter {
+        get { self[ModalKey.self] }
+        set { self[ModalKey.self] = newValue }
+    }
+}
+
+struct ModalPresenter {
+    let present: (Modal) -> Void
+    func callAsFunction(_ modal: Modal) {
+        present(modal)
+    }
+}
+
+
+struct ModalPresenterVM: ViewModifier {
+
+    @State var presented: Modal?
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: $presented) { modal in
+                modal.view()
+            }
+            .environment(\.modalPresenter, ModalPresenter(present: { modal in
+                presented = modal
+            }))
+    }
+}
+
+struct Modal: Identifiable {
+    let id: ID
+    struct ID: Hashable {
+        let value = UUID()
+    }
+
+    init(view: @escaping () -> some View) {
+        self.id = ID()
+        self.view = { AnyView(view()) }
+    }
+
+    let view: () -> AnyView
 }
